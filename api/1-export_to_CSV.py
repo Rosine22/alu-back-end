@@ -1,43 +1,22 @@
 #!/usr/bin/python3
-""" Script that uses JSONPlaceholder API to get information about employee """
+"""
+Uses https://jsonplaceholder.typicode.com along with an employee ID to
+return information about the employee's todo list progress
+"""
+
 import csv
-import json
 import requests
-import sys
+from sys import argv
 
-
-if __name__ == "__main__":
-    def export_employee_todo_csv(employee_id):
-    """Make a GET request to the API endpoint"""
-    response = requests.get(f'https://jsonplaceholder.typicode.com/users/{employee_id}/todos')
-
-    if response.status_code == 200:
-        todos = response.json()
-
- 
-        task_data = []
-        for task in todos:
-            task_data.append([
-                task['userId'],
-                task['username'],
-                str(task['completed']),
-                task['title']
-            ])
-
-        
-        file_name = f"{employee_id}.csv"
-
-       
-        with open(file_name, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["USER_ID", "USERNAME", "TASK_COMPLETED_STATUS", "TASK_TITLE"])
-            writer.writerows(task_data)
-
-        print(f"TODO list exported to {file_name} successfully.")
-
-    else:
-        print(f"Failed to retrieve TODO list for employee {employee_id}.")
-
-
-employee_id = int(input("Enter the employee ID: "))
-export_employee_todo_csv(employee_id)
+if __name__ == '__main__':
+    userId = argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}".
+                        format(userId), verify=False).json()
+    todo = requests.get("https://jsonplaceholder.typicode.com/todos?userId={}".
+                        format(userId), verify=False).json()
+    with open("{}.csv".format(userId), 'w', newline='') as csvfile:
+        taskwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        for task in todo:
+            taskwriter.writerow([int(userId), user.get('username'),
+                                 task.get('completed'),
+                                 task.get('title')])
