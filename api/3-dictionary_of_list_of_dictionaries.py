@@ -1,29 +1,22 @@
 #!/usr/bin/python3
-"""
-Uses https://jsonplaceholder.typicode.com to return information about all
-employee's todo list progress
-"""
+"""get TODO list"""
 
+import csv
 import json
 import requests
-
-if __name__ == '__main__':
-    users = requests.get("https://jsonplaceholder.typicode.com/users",
-                         verify=False).json()
-    userdict = {}
-    usernamedict = {}
-    for user in users:
-        uid = user.get("id")
-        userdict[uid] = []
-        usernamedict[uid] = user.get("username")
-    todo = requests.get("https://jsonplaceholder.typicode.com/todos",
-                        verify=False).json()
-    for task in todo:
-        taskdict = {}
-        uid = task.get("userId")
-        taskdict["task"] = task.get('title')
-        taskdict["completed"] = task.get('completed')
-        taskdict["username"] = usernamedict.get(uid)
-        userdict.get(uid).append(taskdict)
-    with open("todo_all_employees.json", 'w') as jsonfile:
-        json.dump(userdict, jsonfile)
+import sys
+if __name__ == "__main__":
+    def getTodos(id):
+        link = "https://jsonplaceholder.typicode.com/users/{}/todos".format(id)
+        res = requests.get(link)
+        return json.loads(res.text)
+    link = "https://jsonplaceholder.typicode.com/users/"
+    res = requests.get(link)
+    users = json.loads(res.text)
+    data = {}
+    for i in users:
+        todos = getTodos(i["id"])
+        data[i["id"]] = [{"task": j["title"], "completed": j["completed"],
+                          "username": i["username"]} for j in todos]
+    with open("todo_all_employees.json", 'w', encoding='utf-8') as f:
+        f.write(json.dumps(data))
